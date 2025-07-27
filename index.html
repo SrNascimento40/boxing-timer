@@ -185,6 +185,7 @@
             <button id="startBtn">START</button>
             <button id="pauseBtn">PAUSE</button>
             <button id="stopBtn">STOP</button>
+            <button onclick="gongSound.play()">TESTE</button>
         </div>
 
         <div class="powered-by">POWERED BY SNES</div>
@@ -240,7 +241,15 @@
         // Inicia o timer
         function startTimer() {
             if (isRunning) return;
-            
+
+            // Libera o gongSound com uma reprodução silenciosa
+            gongSound.play().then(() => {
+                gongSound.pause();
+                gongSound.currentTime = 0;
+            }).catch(() => {
+                // iOS pode reclamar, então ignoramos o erro
+            });
+
             startBtn.style.display = 'none';
             pauseBtn.style.display = 'block';
             
@@ -249,7 +258,6 @@
             roundStatus.textContent = 'GET READY!';
             updateDisplay();
             
-            // Contagem regressiva inicial
             timerInterval = setInterval(() => {
                 if (isPaused) return;
                 
@@ -263,10 +271,7 @@
                 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    // playGong();
-
-                    gongSound.currentTime = 0;
-                    gongSound.play();
+                    playGong();
                     isCountdown = false;
                     isRunning = true;
                     startRound();
@@ -294,9 +299,7 @@
                 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    // playGong();
-                    gongSound.currentTime = 0;
-                    gongSound.play();
+                    playGong();
                     startRest();
                 }
             }, 1000);
@@ -322,9 +325,7 @@
                 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    // playGong();
-                    gongSound.currentTime = 0;
-                    gongSound.play();
+                    playGong();
                     startRound();
                 }
             }, 1000);

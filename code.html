@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Boxing Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', Courier, monospace;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            background-image: 
+                linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), 
+                url('https://placehold.co/800x1400/000/222?text=.'); 
+            background-size: cover;
+            touch-action: manipulation;
+        }
+
+        #timer-container {
+            width: 100%;
+            max-width: 375px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            border: 8px solid #444;
+            background-color: #111;
+            box-shadow: 
+                0 0 0 4px #000,
+                0 0 0 12px #444,
+                inset 0 0 20px rgba(0, 0, 0, 0.7);
+        }
+
+        #timer-display {
+            font-size: 5rem;
+            margin: 30px 0;
+            font-weight: bold;
+            color: #f00;
+            text-shadow: 
+                0 0 10px #f00,
+                0 0 20px #f00,
+                0 0 30px #f00,
+                4px 4px 0 #000;
+            letter-spacing: 2px;
+            font-family: 'Press Start 2P', cursive;
+            text-align: center;
+        }
+
+        .round-info {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: #ccc;
+            text-shadow: 2px 2px 0 #000;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        button {
+            padding: 15px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.1s;
+            position: relative;
+            background-color: #333;
+            color: #fff;
+            box-shadow: 
+                4px 4px 0 #000,
+                inset 0 0 0 2px #666;
+            min-width: 100px;
+        }
+
+        button:active {
+            transform: translate(2px, 2px);
+            box-shadow: 
+                2px 2px 0 #000,
+                inset 0 0 0 2px #666;
+        }
+
+        #startBtn {
+            background-color: #2a2;
+            box-shadow: 
+                4px 4px 0 #000,
+                inset 0 0 0 2px #4c4;
+            color: #fff;
+        }
+
+        #pauseBtn {
+            background-color: #cc0;
+            box-shadow: 
+                4px 4px 0 #000,
+                inset 0 0 0 2px #ff0;
+            color: #000;
+            display: none;
+        }
+
+        #stopBtn {
+            background-color: #c22;
+            box-shadow: 
+                4px 4px 0 #000,
+                inset 0 0 0 2px #f44;
+            color: #fff;
+        }
+
+        #title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #fff;
+            text-shadow: 
+                3px 3px 0 #000,
+                5px 5px 0 #f00;
+            font-family: 'Press Start 2P', cursive;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .powered-by {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.7rem;
+            color: #666;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        @media (max-width: 425px) {
+            #timer-display {
+                font-size: 4rem;
+            }
+            
+            button {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+        }
+
+        @keyframes flash {
+            0% { opacity: 1; }
+            50% { opacity: 0.2; }
+            100% { opacity: 1; }
+        }
+
+        .flash {
+            animation: flash 0.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div id="timer-container">
+        <h1 id="title">Boxing Timer</h1>
+        <div class="round-info" id="roundStatus">READY</div>
+        <div id="timer-display">03:00</div>
+        
+        <div class="controls">
+            <button id="startBtn">START</button>
+            <button id="pauseBtn">PAUSE</button>
+            <button id="stopBtn">STOP</button>
+        </div>
+
+        <div class="powered-by">POWERED BY SNES</div>
+    </div>
+
+    <audio id="gongSound" src="dingdong.mp3" preload="auto"></audio>
+    <audio id="countdownSound" src="beep.mp3" preload="auto"></audio>
+
+    <script>
+        // Elementos DOM
+        const timerDisplay = document.getElementById('timer-display');
+        const roundStatus = document.getElementById('roundStatus');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const gongSound = document.getElementById('gongSound');
+        const countdownSound = document.getElementById('countdownSound');
+
+        // Configurações
+        const ROUND_TIME = 180; // 3 minutos
+        const REST_TIME = 60;   // 1 minuto
+        const COUNTDOWN_TIME = 5; // 5 segundos
+
+        // Estado do timer
+        let timeLeft = ROUND_TIME;
+        let timerInterval;
+        let isRunning = false;
+        let isPaused = false;
+        let isResting = false;
+        let isCountdown = false;
+
+        function init() {
+            updateDisplay();
+            
+            startBtn.addEventListener('click', startTimer);
+            pauseBtn.addEventListener('click', togglePause);
+            stopBtn.addEventListener('click', stopTimer);
+        }
+
+        // Atualiza o display
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 10 && (isRunning || isCountdown) && !isPaused) {
+                timerDisplay.classList.add('flash');
+            } else {
+                timerDisplay.classList.remove('flash');
+            }
+        }
+
+        // Inicia o timer
+        function startTimer() {
+            if (isRunning) return;
+            
+            startBtn.style.display = 'none';
+            pauseBtn.style.display = 'block';
+            
+            isCountdown = true;
+            timeLeft = COUNTDOWN_TIME;
+            roundStatus.textContent = 'GET READY!';
+            updateDisplay();
+            
+            // Contagem regressiva inicial
+            timerInterval = setInterval(() => {
+                if (isPaused) return;
+                
+                timeLeft--;
+                updateDisplay();
+                
+                if (timeLeft > 0 && timeLeft <= 3) {
+                    countdownSound.currentTime = 0;
+                    countdownSound.play();
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    playGong();
+                    isCountdown = false;
+                    isRunning = true;
+                    startRound();
+                }
+            }, 1000);
+        }
+
+        // Inicia um round
+        function startRound() {
+            isResting = false;
+            timeLeft = ROUND_TIME;
+            roundStatus.textContent = 'ROUND!';
+            updateDisplay();
+            
+            timerInterval = setInterval(() => {
+                if (isPaused) return;
+                
+                timeLeft--;
+                updateDisplay();
+                
+                if (timeLeft === 10) {
+                    countdownSound.currentTime = 0;
+                    countdownSound.play();
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    playGong();
+                    startRest();
+                }
+            }, 1000);
+        }
+
+        // Inicia o intervalo
+        function startRest() {
+            isResting = true;
+            timeLeft = REST_TIME;
+            roundStatus.textContent = 'REST';
+            updateDisplay();
+            
+            timerInterval = setInterval(() => {
+                if (isPaused) return;
+                
+                timeLeft--;
+                updateDisplay();
+                
+                if (timeLeft === 10) {
+                    countdownSound.currentTime = 0;
+                    countdownSound.play();
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    playGong();
+                    startRound();
+                }
+            }, 1000);
+        }
+
+        // Pausa/Continua o timer
+        function togglePause() {
+            isPaused = !isPaused;
+            pauseBtn.textContent = isPaused ? 'RESUME' : 'PAUSE';
+            
+            if (isPaused) {
+                roundStatus.textContent = 'PAUSED';
+            } else {
+                if (isCountdown) {
+                    roundStatus.textContent = 'GET READY!';
+                } else if (isResting) {
+                    roundStatus.textContent = 'REST';
+                } else {
+                    roundStatus.textContent = 'ROUND!';
+                }
+            }
+        }
+
+        // Para o timer
+        function stopTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            isPaused = false;
+            isResting = false;
+            isCountdown = false;
+            timeLeft = ROUND_TIME;
+            
+            startBtn.style.display = 'block';
+            pauseBtn.style.display = 'none';
+            pauseBtn.textContent = 'PAUSE';
+            
+            roundStatus.textContent = 'READY';
+            timerDisplay.classList.remove('flash');
+            updateDisplay();
+        }
+
+        // Toca o som do gongo
+        function playGong() {
+            gongSound.currentTime = 0;
+            gongSound.play();
+        }
+
+        // Carrega a fonte retro
+        function loadFont() {
+            const link = document.createElement('link');
+            link.href = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap';
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+        }
+
+        // Inicia tudo quando a página carrega
+        window.onload = function() {
+            loadFont();
+            init();
+        };
+    </script>
+</body>
+</html>

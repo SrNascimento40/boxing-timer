@@ -263,7 +263,10 @@
                 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    playGong();
+                    // playGong();
+
+                    gongSound.currentTime = 0;
+                    gongSound.play();
                     isCountdown = false;
                     isRunning = true;
                     startRound();
@@ -291,7 +294,9 @@
                 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    playGong();
+                    // playGong();
+                    gongSound.currentTime = 0;
+                    gongSound.play();
                     startRest();
                 }
             }, 1000);
@@ -317,7 +322,9 @@
                 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    playGong();
+                    // playGong();
+                    gongSound.currentTime = 0;
+                    gongSound.play();
                     startRound();
                 }
             }, 1000);
